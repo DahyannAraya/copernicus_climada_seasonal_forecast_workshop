@@ -1676,3 +1676,5 @@ def forecast_skills_metrics(forecast_years, init_months, handler, index_metric, 
                 wrap=True, fontsize=14)
 
     plt.show()
+
+    
