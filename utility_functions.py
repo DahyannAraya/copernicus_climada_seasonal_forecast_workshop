@@ -510,7 +510,6 @@ def load_impact_data(init_month, year_list, index_metric):
     year_str = str(year_list[0])
     impact_dir = os.path.join(
         base_path,
-        "seasonal_forecasts",
         "dwd",
         "sys21",
         year_str,
@@ -733,7 +732,6 @@ def load_impact_data(init_month, year_list, index_metric):
     year_str = str(year_list[0])
     impact_dir = os.path.join(
         base_path,
-        "seasonal_forecasts",
         "dwd",
         "sys21",
         year_str,
@@ -1005,7 +1003,6 @@ def load_impact_data(init_month, year_list, index_metric):
     year_str = str(year_list[0])
     impact_dir = os.path.join(
         base_path,
-        "seasonal_forecasts",
         "dwd",
         "sys21",
         year_str,
