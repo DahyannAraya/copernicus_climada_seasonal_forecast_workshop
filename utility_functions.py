@@ -277,29 +277,6 @@ def plot_ensemble_index_summary(
     plt.tight_layout()
     plt.show()
 
-
-
-#### plot_individual_and_aggregated_impacts ####
-
-def thousands_comma_formatter(x, pos):
-    """
-    Format tick values as thousands with commas.
-
-    Parameters
-    ----------
-    x : float
-        Tick value (usually raw population value).
-    pos : int
-        Tick position (required by matplotlib, not used here).
-
-    Returns
-    -------
-    str
-        Tick label in 'X,XXXK' format.
-    """
-    return "{:,.0f}K".format(x * 1e-3)
-
-
 def load_impact_data(init_month, year_list, index_metric):
     """
     Load CLIMADA Impact object for a given year, initialization month, and index metric.
@@ -353,6 +330,27 @@ def load_impact_data(init_month, year_list, index_metric):
     impact_path = os.path.join(impact_dir, impact_files[0])
     print(f"Loading impact file: {impact_path}")
     return Impact.from_hdf5(impact_path)
+
+#### plot_individual_and_aggregated_impacts ####
+
+def thousands_comma_formatter(x, pos):
+    """
+    Format tick values as thousands with commas.
+
+    Parameters
+    ----------
+    x : float
+        Tick value (usually raw population value).
+    pos : int
+        Tick position (required by matplotlib, not used here).
+
+    Returns
+    -------
+    str
+        Tick label in 'X,XXXK' format.
+    """
+    return "{:,.0f}K".format(x * 1e-3)
+
 
 
 def plot_individual_and_aggregated_impacts(year_list, index_metric, *init_months):
@@ -486,56 +484,6 @@ def log_formatter(x, pos):
         Formatted tick label as a LaTeX-style power of 10.
     """
     return f"$10^{{{int(x)}}}$"
-
-
-def load_impact_data(init_month, year_list, index_metric):
-    """
-    Load the Impact object for a given year, initialization month, and index metric.
-
-    Parameters
-    ----------
-    init_month : str
-        Initialization month as a two-digit string (e.g., "04").
-    year_list : list of int
-        List of forecast years (only the first year is used).
-    index_metric : str
-        Name of the index metric (e.g., "TX30").
-
-    Returns
-    -------
-    Impact
-        A CLIMADA Impact object loaded from the corresponding HDF5 file.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the impact directory or matching file is not found.
-    """
-    year_str = str(year_list[0])
-    impact_dir = os.path.join(
-        base_path,
-        "dwd",
-        "sys21",
-        year_str,
-        f"init{init_month}",
-        "valid06_08",
-        "impact",
-        index_metric,
-    )
-
-    if not os.path.isdir(impact_dir):
-        raise FileNotFoundError(f"Impact directory does not exist: {impact_dir}")
-
-    impact_files = [
-        f
-        for f in os.listdir(impact_dir)
-        if f.startswith(f"{index_metric}_") and f.endswith(".hdf5")
-    ]
-    if not impact_files:
-        raise FileNotFoundError(f"No impact file found in {impact_dir}")
-
-    impact_path = os.path.join(impact_dir, impact_files[0])
-    return Impact.from_hdf5(impact_path)
 
 
 def plot_impact_distributions(year_list, index_metric, init_months):
@@ -708,56 +656,6 @@ def month_num_to_name_stats(month_num):
         "December",
     ]
     return month_names[month_num - 1]
-
-
-def load_impact_data(init_month, year_list, index_metric):
-    """
-    Load CLIMADA Impact object for a given initialization month and year.
-
-    Parameters
-    ----------
-    init_month : str
-        Initialization month as a two-digit string (e.g., '04').
-    year_list : list of int
-        List containing the target forecast year. Only the first entry is used.
-    index_metric : str
-        Climate index metric (e.g., 'TX30').
-
-    Returns
-    -------
-    climada.hazard.Impact
-        Loaded Impact object containing impact data.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the impact directory or the impact file does not exist.
-    """
-    year_str = str(year_list[0])
-    impact_dir = os.path.join(
-        base_path,
-        "dwd",
-        "sys21",
-        year_str,
-        f"init{init_month}",
-        "valid06_08",
-        "impact",
-        index_metric,
-    )
-
-    if not os.path.isdir(impact_dir):
-        raise FileNotFoundError(f"Impact directory does not exist: {impact_dir}")
-
-    impact_files = [
-        f
-        for f in os.listdir(impact_dir)
-        if f.startswith(f"{index_metric}_") and f.endswith(".hdf5")
-    ]
-    if not impact_files:
-        raise FileNotFoundError(f"No impact file found in {impact_dir}")
-
-    impact_path = os.path.join(impact_dir, impact_files[0])
-    return Impact.from_hdf5(impact_path)
 
 
 def plot_statistics_per_location(year_list, index_metric, *init_months, scale="normal"):
@@ -981,59 +879,6 @@ def event_num_to_month_name(base_month, event_num):
     return month_num_to_name_stats(new_month_index + 1)
 
 
-def load_impact_data(init_month, year_list, index_metric):
-    """
-    Load a CLIMADA Impact object from the impact directory for a given init month and year.
-
-    Parameters
-    ----------
-    init_month : str
-        Initialization month (e.g., '03').
-    year_list : list of int
-        List containing a single forecast year (used to resolve folder structure).
-    index_metric : str
-        Name of the climate index (e.g., 'TX30', 'HW').
-
-    Returns
-    -------
-    climada.hazard.Impact
-        Loaded Impact object containing impact data for the given forecast.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the impact directory or expected file does not exist.
-    """
-    year_str = str(year_list[0])
-
-    # Fix: Construct the impact directory path correctly without duplication
-    impact_dir = os.path.join(
-        base_path,
-        "dwd",
-        "sys21",
-        year_str,
-        f"init{init_month}",
-        "valid06_08",
-        "impact",
-        index_metric,
-    )
-
-    print(f"Looking for impact files in: {impact_dir}")
-
-    if not os.path.isdir(impact_dir):
-        raise FileNotFoundError(f"Impact directory does not exist: {impact_dir}")
-
-    impact_files = [
-        f
-        for f in os.listdir(impact_dir)
-        if f.startswith(f"{index_metric}_") and f.endswith(".hdf5")
-    ]
-    if not impact_files:
-        raise FileNotFoundError(f"No impact file found in {impact_dir}")
-
-    impact_path = os.path.join(impact_dir, impact_files[0])
-    print(f"Loading impact file: {impact_path}")
-    return Impact.from_hdf5(impact_path)
 
 
 def plot_statistics_and_member_agreement(
