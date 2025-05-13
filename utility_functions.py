@@ -327,7 +327,6 @@ def load_impact_data(init_month, year_list, index_metric):
 
     impact_dir = os.path.join(
         base_path,
-        "seasonal_forecasts",
         "dwd",
         "sys21",
         year_str,
