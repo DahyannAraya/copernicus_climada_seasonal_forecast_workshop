@@ -326,7 +326,7 @@ def load_impact_data(init_month, year_list, index_metric):
     year_str = str(year_list[0])
 
     impact_dir = os.path.join(
-        climada_base_path,
+        base_path,
         "seasonal_forecasts",
         "dwd",
         "sys21",
@@ -510,7 +510,7 @@ def load_impact_data(init_month, year_list, index_metric):
     """
     year_str = str(year_list[0])
     impact_dir = os.path.join(
-        climada_base_path,
+        base_path,
         "seasonal_forecasts",
         "dwd",
         "sys21",
@@ -733,7 +733,7 @@ def load_impact_data(init_month, year_list, index_metric):
     """
     year_str = str(year_list[0])
     impact_dir = os.path.join(
-        climada_base_path,
+        base_path,
         "seasonal_forecasts",
         "dwd",
         "sys21",
@@ -1005,7 +1005,7 @@ def load_impact_data(init_month, year_list, index_metric):
     """
     year_str = str(year_list[0])
     impact_dir = os.path.join(
-        climada_base_path,
+        base_path,
         "seasonal_forecasts",
         "dwd",
         "sys21",
