@@ -325,6 +325,7 @@ def load_impact_data(init_month, year_list, index_metric):
     """
     year_str = str(year_list[0])
 
+    # Fix: Construct the impact directory path correctly without duplication
     impact_dir = os.path.join(
         base_path,
         "dwd",
@@ -335,6 +336,8 @@ def load_impact_data(init_month, year_list, index_metric):
         "impact",
         index_metric,
     )
+
+    print(f"Looking for impact files in: {impact_dir}")
 
     if not os.path.isdir(impact_dir):
         raise FileNotFoundError(f"Impact directory does not exist: {impact_dir}")
@@ -348,6 +351,7 @@ def load_impact_data(init_month, year_list, index_metric):
         raise FileNotFoundError(f"No impact file found in {impact_dir}")
 
     impact_path = os.path.join(impact_dir, impact_files[0])
+    print(f"Loading impact file: {impact_path}")
     return Impact.from_hdf5(impact_path)
 
 
@@ -1001,6 +1005,8 @@ def load_impact_data(init_month, year_list, index_metric):
         If the impact directory or expected file does not exist.
     """
     year_str = str(year_list[0])
+
+    # Fix: Construct the impact directory path correctly without duplication
     impact_dir = os.path.join(
         base_path,
         "dwd",
@@ -1011,6 +1017,8 @@ def load_impact_data(init_month, year_list, index_metric):
         "impact",
         index_metric,
     )
+
+    print(f"Looking for impact files in: {impact_dir}")
 
     if not os.path.isdir(impact_dir):
         raise FileNotFoundError(f"Impact directory does not exist: {impact_dir}")
@@ -1024,6 +1032,7 @@ def load_impact_data(init_month, year_list, index_metric):
         raise FileNotFoundError(f"No impact file found in {impact_dir}")
 
     impact_path = os.path.join(impact_dir, impact_files[0])
+    print(f"Loading impact file: {impact_path}")
     return Impact.from_hdf5(impact_path)
 
 
