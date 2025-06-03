@@ -13,7 +13,7 @@ import matplotlib.gridspec as gridspec
 from matplotlib.ticker import FuncFormatter
 from climada.hazard import Hazard
 from climada.engine import Impact
-from seasonal_forecast_tools.create_seasonal_forecast_hazard import SeasonalForecast
+from seasonal_forecast_tools.core.seasonal_forecast import SeasonalForecast
 
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="shapely")
 warnings.filterwarnings("ignore", message="All-NaN axis encountered")
@@ -24,7 +24,7 @@ warnings.filterwarnings(
     category=UserWarning,
     message="This figure includes Axes that are not compatible with tight_layout",
 )
-from seasonal_forecast_tools import config
+from seasonal_forecast_tools.utils import config
 base_path = config.SEASONAL_FORECAST_DIR
 
 
