@@ -32,7 +32,7 @@ base_path = config.SEASONAL_FORECAST_DIR
 
 #### plot forescast ####
 def plot_forecast(
-    forecast_year, initiation_month_str, target_month, handler, index_metric="TX30"
+    forecast_year, initiation_month_str, target_month, forecast, index_metric="TX30"
 ):
     """
     Plot all 50 ensemble members for a given seasonal forecast month.
@@ -45,7 +45,7 @@ def plot_forecast(
         Forecast initiation month in string format (e.g., "03" for March).
     target_month : str
         Forecast valid month in "YYYY-MM" format (must match the 'step' coordinate in the dataset).
-    handler : SeasonalForecast
+    forecast : SeasonalForecast
         Object that provides access to the file structure via get_pipeline_path(...).
     index_metric : str, optional
         Name of the climate index variable to visualize. Default is "TX30".
@@ -60,7 +60,7 @@ def plot_forecast(
     None
         Displays a grid of maps (5 rows × 10 columns) with one plot per ensemble member.
     """
-    indices_paths = handler.get_pipeline_path(
+    indices_paths = forecast.get_pipeline_path(
         forecast_year, initiation_month_str, "indices"
     )
 
@@ -184,7 +184,7 @@ def extract_statistics(file_path, forecast_months):
 
 
 def plot_ensemble_index_summary(
-    forecast_year, initiation_months, valid_periods, handler, index_metric="TX30"
+    forecast_year, initiation_months, valid_periods, forecast, index_metric="TX30"
 ):
     """
     Plot ensemble forecast statistics (Mean, Median, Min, Max, Std) per initiation month.
@@ -197,7 +197,7 @@ def plot_ensemble_index_summary(
         Initialization months (e.g., ['03', '04']).
     valid_periods : list of str
         Forecast valid months (e.g., ['06', '07', '08']).
-    handler : object
+    forecast : object
         Object with method get_pipeline_path(...) that returns file paths for the given config.
     index_metric : str, optional
         Name of the index to be plotted (default is 'TX30').
@@ -213,10 +213,10 @@ def plot_ensemble_index_summary(
     ]  # Convert to "YYYY-MM" format
     valid_period_str = "_".join(valid_periods)  # Format valid periods for path lookup
 
-    # Retrieve file paths dynamically using handler
+    # Retrieve file paths dynamically using forecast
     file_paths = []
     for init_month in initiation_months:
-        indices_paths = handler.get_pipeline_path(forecast_year, init_month, "indices")
+        indices_paths = forecast.get_pipeline_path(forecast_year, init_month, "indices")
 
         if isinstance(indices_paths, dict) and "stats" in indices_paths:
             file_paths.append(str(indices_paths["stats"]))
@@ -1095,7 +1095,7 @@ def plot_statistics_and_member_agreement(
 
 #### plot_intensity_distributions ####
 
-def analyze_hazard_intensities(year, months, handler):
+def analyze_hazard_intensities(year, months, forecast):
     """
     Load CLIMADA Hazard objects and extract intensity values for each event.
 
@@ -1105,7 +1105,7 @@ def analyze_hazard_intensities(year, months, handler):
         Forecast year of interest.
     months : list of str
         List of initiation months (e.g., ['03', '04', '05']).
-    handler : object
+    forecast : object
         Object providing the method `get_pipeline_path(year, month, "hazard")`
         to resolve paths to hazard HDF5 files.
 
@@ -1121,7 +1121,7 @@ def analyze_hazard_intensities(year, months, handler):
         }
     """
     def load_hazard_data(year, month):
-        hazard_path = handler.get_pipeline_path(year, month, "hazard")
+        hazard_path = forecast.get_pipeline_path(year, month, "hazard")
         try:
             return Hazard.from_hdf5(hazard_path)
         except FileNotFoundError:
@@ -1141,7 +1141,7 @@ def analyze_hazard_intensities(year, months, handler):
             intensity_data[month] = {}
     return intensity_data
 
-def print_summary_statistics(year, months, handler):
+def print_summary_statistics(year, months, forecast):
     """
     Print summary statistics (min, max, mean, median, std) of hazard intensities.
 
@@ -1151,14 +1151,14 @@ def print_summary_statistics(year, months, handler):
         Forecast year to analyze.
     months : list of str
         List of initiation months (e.g., ['03', '04', '05']).
-    handler : object
+    forecast : object
         Object used to resolve file paths to hazard HDF5 files.
 
     Returns
     -------
     None
     """
-    intensity_data = analyze_hazard_intensities(year, months, handler)
+    intensity_data = analyze_hazard_intensities(year, months, forecast)
     for month, intensity_dict in intensity_data.items():
         all_intensities = np.concatenate(list(intensity_dict.values())) if intensity_dict else np.array([])
         print(f"\nInitiation Month {month}")
@@ -1171,7 +1171,7 @@ def print_summary_statistics(year, months, handler):
         else:
             print("No intensity data found.")
 
-def plot_intensity_distributions(year, months, handler):
+def plot_intensity_distributions(year, months, forecast):
     """
     Plot histograms of hazard intensities for each forecast initiation month.
 
@@ -1181,14 +1181,14 @@ def plot_intensity_distributions(year, months, handler):
         Forecast year to visualize.
     months : list of str
         List of initiation months (e.g., ['03', '04', '05']).
-    handler : object
+    forecast : object
         Object used to resolve file paths to hazard HDF5 files.
 
     Returns
     -------
     None
     """
-    intensity_data = analyze_hazard_intensities(year, months, handler)
+    intensity_data = analyze_hazard_intensities(year, months, forecast)
 
     fig, axes = plt.subplots(1, len(intensity_data), figsize=(15, 5), sharey=True)
     if len(intensity_data) == 1:
@@ -1214,7 +1214,7 @@ def plot_intensity_distributions(year, months, handler):
 
 #### forecast_skills_metrics ####
 
-def plot_smr_line(ax, forecast_years, init_months, handler, index_metric):
+def plot_smr_line(ax, forecast_years, init_months, forecast, index_metric):
     """
     Plot the Spread to Mean Ratio (SMR) of a climate index across forecast months.
 
@@ -1226,8 +1226,8 @@ def plot_smr_line(ax, forecast_years, init_months, handler, index_metric):
         List of forecast years to include.
     init_months : list of str
         List of initialization months (e.g., ['03', '04']).
-    handler : object
-        Handler object that provides the `get_pipeline_path(...)` method.
+    forecast : object
+        forecast object that provides the `get_pipeline_path(...)` method.
     index_metric : str
         Name of the climate index (e.g., 'TX30').
 
@@ -1241,7 +1241,7 @@ def plot_smr_line(ax, forecast_years, init_months, handler, index_metric):
     for year in forecast_years:
         for init_month in init_months:
             try:
-                paths = handler.get_pipeline_path(year, init_month, "indices")
+                paths = forecast.get_pipeline_path(year, init_month, "indices")
                 monthly_path = paths.get("monthly")
                 if not monthly_path or not monthly_path.exists():
                     print(f"Monthly file missing for {year}-init{init_month}.")
@@ -1279,7 +1279,7 @@ def plot_smr_line(ax, forecast_years, init_months, handler, index_metric):
     ax.grid(True)
 
 
-def plot_iqr_line(ax, forecast_years, init_months, handler, index_metric):
+def plot_iqr_line(ax, forecast_years, init_months, forecast, index_metric):
     """
     Plot the Interquartile Range (IQR) of a climate index across forecast months.
 
@@ -1291,8 +1291,8 @@ def plot_iqr_line(ax, forecast_years, init_months, handler, index_metric):
         List of forecast years to include.
     init_months : list of str
         List of initialization months (e.g., ['03', '04']).
-    handler : object
-        Handler object that provides the `get_pipeline_path(...)` method.
+    forecast : object
+        forecast object that provides the `get_pipeline_path(...)` method.
     index_metric : str
         Name of the climate index (e.g., 'TX30').
 
@@ -1306,7 +1306,7 @@ def plot_iqr_line(ax, forecast_years, init_months, handler, index_metric):
     for year in forecast_years:
         for init_month in init_months:
             try:
-                paths = handler.get_pipeline_path(year, init_month, "indices")
+                paths = forecast.get_pipeline_path(year, init_month, "indices")
                 monthly_path = paths.get("monthly")
                 if not monthly_path or not monthly_path.exists():
                     print(f"Monthly file missing for {year}-init{init_month}.")
@@ -1343,7 +1343,7 @@ def plot_iqr_line(ax, forecast_years, init_months, handler, index_metric):
     ax.grid(True)
 
 
-def plot_ensemble_spread_line(ax, forecast_years, init_months, handler, index_metric):
+def plot_ensemble_spread_line(ax, forecast_years, init_months, forecast, index_metric):
     """
     Plot the ensemble standard deviation (spread) of a climate index across forecast months.
 
@@ -1355,8 +1355,8 @@ def plot_ensemble_spread_line(ax, forecast_years, init_months, handler, index_me
         List of forecast years to include.
     init_months : list of str
         List of initialization months (e.g., ['03', '04']).
-    handler : object
-        Handler object that provides the `get_pipeline_path(...)` method.
+    forecast : object
+        forecast object that provides the `get_pipeline_path(...)` method.
     index_metric : str
         Name of the climate index (e.g., 'TX30').
 
@@ -1370,7 +1370,7 @@ def plot_ensemble_spread_line(ax, forecast_years, init_months, handler, index_me
     for year in forecast_years:
         for init_month in init_months:
             try:
-                paths = handler.get_pipeline_path(year, init_month, "indices")
+                paths = forecast.get_pipeline_path(year, init_month, "indices")
                 monthly_path = paths.get("monthly")
                 if not monthly_path or not monthly_path.exists():
                     print(f"Monthly file missing for {year}-init{init_month}.")
@@ -1405,7 +1405,7 @@ def plot_ensemble_spread_line(ax, forecast_years, init_months, handler, index_me
     ax.grid(True)
 
 
-def plot_eai_line(ax, forecast_years, init_months, forecast_months, handler, index_metric, threshold):
+def plot_eai_line(ax, forecast_years, init_months, forecast_months, forecast, index_metric, threshold):
     """
     Plot the Ensemble Agreement Index (EAI) for a climate index across forecast months.
 
@@ -1419,8 +1419,8 @@ def plot_eai_line(ax, forecast_years, init_months, forecast_months, handler, ind
         List of initialization months (e.g., ['03', '04']).
     forecast_months : list of str or None
         List of valid forecast months (not used internally, can be None).
-    handler : object
-        Handler object that provides the `get_pipeline_path(...)` method.
+    forecast : object
+        forecast object that provides the `get_pipeline_path(...)` method.
     index_metric : str
         Name of the climate index (e.g., 'TX30').
     threshold : float
@@ -1436,7 +1436,7 @@ def plot_eai_line(ax, forecast_years, init_months, forecast_months, handler, ind
     for year in forecast_years:
         for init_month in init_months:
             try:
-                paths = handler.get_pipeline_path(year, init_month, "indices")
+                paths = forecast.get_pipeline_path(year, init_month, "indices")
 
                 monthly_path = paths.get("monthly")
                 if not monthly_path or not monthly_path.exists():
@@ -1474,7 +1474,7 @@ def plot_eai_line(ax, forecast_years, init_months, forecast_months, handler, ind
     ax.legend(fontsize=12)
     ax.grid(True)
     
-def forecast_skills_metrics(forecast_years, init_months, handler, index_metric, threshold):
+def forecast_skills_metrics(forecast_years, init_months, forecast, index_metric, threshold):
     """
     Plot all ensemble forecast skill metrics (SMR, IQR, Spread, EAI) in a 2x2 grid.
 
@@ -1484,8 +1484,8 @@ def forecast_skills_metrics(forecast_years, init_months, handler, index_metric, 
         List of forecast years to include in the evaluation.
     init_months : list of str
         List of initialization months (e.g., ['03', '04']).
-    handler : object
-        Handler object that provides the `get_pipeline_path(...)` method.
+    forecast : object
+        forecast object that provides the `get_pipeline_path(...)` method.
     index_metric : str
         Name of the climate index (e.g., 'TX30').
     threshold : float
@@ -1498,10 +1498,10 @@ def forecast_skills_metrics(forecast_years, init_months, handler, index_metric, 
     fig, axes = plt.subplots(2, 2, figsize=(20, 12))
     fig.suptitle("Ensemble Skill Metrics", fontsize=16)
 
-    plot_smr_line(axes[0, 0], forecast_years, init_months, handler, index_metric)
-    plot_iqr_line(axes[0, 1], forecast_years, init_months, handler, index_metric)
-    plot_ensemble_spread_line(axes[1, 0], forecast_years, init_months, handler, index_metric)
-    plot_eai_line(axes[1, 1], forecast_years, init_months, forecast_months=None, handler=handler, index_metric=index_metric, threshold=threshold)
+    plot_smr_line(axes[0, 0], forecast_years, init_months, forecast, index_metric)
+    plot_iqr_line(axes[0, 1], forecast_years, init_months, forecast, index_metric)
+    plot_ensemble_spread_line(axes[1, 0], forecast_years, init_months, forecast, index_metric)
+    plot_eai_line(axes[1, 1], forecast_years, init_months, forecast_months=None, forecast=forecast, index_metric=index_metric, threshold=threshold)
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
 
