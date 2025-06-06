@@ -70,9 +70,17 @@ cd copernicus_climada_seasonal_forecast_workshop
 ```
 
 ## **Resources**
+- [Copernicus Seasonal Forecast Tools package](https://github.com/DahyannAraya/copernicus-seasonal-forecast-toolsb)
+
+- [Copernicus Seasonal Forecast Tools documentation](https://copernicus-seasonal-forecast-tools.readthedocs.io/en/latest/?badge=latest)
+
+- [Copernicus Seasonal Forecast Tools demo](https://colab.research.google.com/github/DahyannAraya/copernicus_climada_seasonal_forecast_workshop/blob/main/Modul_climada_copernicus_seasonal_forecast_workshop.ipynb#scrollTo=Download_and_Process_Data)
+
+- [Copernicus Seasonal Forecast Tools extended demostration](https://colab.research.google.com/github/DahyannAraya/climada_copernicus_seasonal_forecast_workshop/blob/main/DEMO_Modul_climada_copernicus_seasonal_forecast_workshop.ipynb)
+
+Additional Resources
 - [U-CLIMADAPT Project](https://www.copernicus-user-uptake.eu/user-uptake/details/responding-to-the-impact-of-climate-change-u-climadapt-488)
 - [Copernicus Seasonal Forecast on CLIMADA](to do)
-- [Copernicus Seasonal Forecast Module extended demostration](https://colab.research.google.com/github/DahyannAraya/climada_copernicus_seasonal_forecast_workshop/blob/main/DEMO_Modul_climada_copernicus_seasonal_forecast_workshop.ipynb)
 - [Seasonal forecast daily and subdaily data on single levels](https://cds.climate.copernicus.eu/datasets/seasonal-original-single-levels?tab=overview)
 - [Copernicus Climate Data Store](https://cds.climate.copernicus.eu)
 - [CLIMADA Documentation](https://climada.ethz.ch/)
