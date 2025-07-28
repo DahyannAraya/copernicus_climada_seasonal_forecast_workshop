@@ -32,102 +32,91 @@ base_path = config.SEASONAL_FORECAST_DIR
 
 #### plot forescast ####
 def plot_forecast(
-    forecast_year, initiation_month_str, target_month, forecast, index_metric="TX30"
-):
+    forecast_year: int,
+    initiation_month_str: str,
+    target_month: str,
+    forecast,
+    index_metric: str = "TX30",
+    indices_key: str = "monthly"      # <-- new
+) -> None:
     """
-    Plot all 50 ensemble members for a given seasonal forecast month.
+    Plot the 50 ensemble members for one target month.
 
     Parameters
     ----------
     forecast_year : int
-        The year of the seasonal forecast (e.g., 2023).
+        Seasonal forecast year (e.g. 2023).
     initiation_month_str : str
-        Forecast initiation month in string format (e.g., "03" for March).
+        Forecast initiation month, two‑digit string (e.g. "03").
     target_month : str
-        Forecast valid month in "YYYY-MM" format (must match the 'step' coordinate in the dataset).
+        Valid month in "YYYY-MM" format (must match the dataset "step" coordinate).
     forecast : SeasonalForecast
-        Object that provides access to the file structure via get_pipeline_path(...).
-    index_metric : str, optional
-        Name of the climate index variable to visualize. Default is "TX30".
-
-    Raises
-    ------
-    ValueError
-        If dataset or required variables/coordinates are not found, or loading fails.
-
-    Returns
-    -------
-    None
-        Displays a grid of maps (5 rows × 10 columns) with one plot per ensemble member.
+        Object exposing get_pipeline_path(...).
+    index_metric : str, default "TX30"
+        Variable to plot.
+    indices_key : str, default "monthly"
+        Which entry in the path dictionary to use
+        ("monthly", "index_window_monthly", "daily", "stats", ...)
     """
+
     indices_paths = forecast.get_pipeline_path(
         forecast_year, initiation_month_str, "indices"
     )
+    print(f"Available path keys: {list(indices_paths.keys())}")
 
-    # Ensure "monthly" exists in the returned dictionary
-    if not isinstance(indices_paths, dict) or "monthly" not in indices_paths:
-        raise ValueError("'monthly' key not found in the indices path dictionary.")
-
-    path_to_hazard = indices_paths["monthly"]
-    print(f"Using monthly index file: {path_to_hazard}")
-
-    # Load dataset
-    try:
-        ds = xr.open_dataset(path_to_hazard, engine="netcdf4")
-        print(f"Successfully loaded dataset: {path_to_hazard}")
-    except Exception as e:
-        raise ValueError(f"Error loading dataset: {e}")
-
-    # Select data for the specific month
-    if "step" in ds.coords:
-        data_for_month = ds.sel(step=target_month)
+    # Decide which key to use
+    if indices_key in indices_paths:
+        path_to_hazard = indices_paths[indices_key]
+    elif "index_window_monthly" in indices_paths:
+        print('Requested key "monthly" not found; using "index_window_monthly" instead.')
+        path_to_hazard = indices_paths["index_window_monthly"]
     else:
         raise ValueError(
-            f"'step' coordinate not found. Available coordinates: {list(ds.coords.keys())}"
+            f'None of the expected keys ({indices_key}, "index_window_monthly") '
+            f'are present in {indices_paths.keys()}.'
         )
 
-    # Verify variable name
-    if index_metric not in ds.variables:
+    print(f"Opening file: {path_to_hazard}")
+    try:
+        ds = xr.open_dataset(path_to_hazard, engine="netcdf4")
+    except Exception as exc:
+        raise ValueError(f"Failed to open {path_to_hazard}: {exc}")
+
+    if "step" not in ds.coords:
+        raise ValueError(f'"step" coordinate not found; coords = {list(ds.coords.keys())}')
+
+    data_for_month = ds.sel(step=target_month)
+
+    if index_metric not in ds.data_vars:
         raise ValueError(
-            f"Variable '{index_metric}' not found in dataset. Available variables: {list(ds.data_vars.keys())}"
+            f'"{index_metric}" not in dataset variables: {list(ds.data_vars.keys())}'
         )
 
-    # Create subplots
+    # ---- plotting ----------------------------------------------------------
     fig, axs = plt.subplots(
-        nrows=5,
-        ncols=10,
-        figsize=(25, 15),
-        subplot_kw={"projection": ccrs.PlateCarree()},
+        nrows=5, ncols=10, figsize=(25, 15),
+        subplot_kw={"projection": ccrs.PlateCarree()}
     )
-    axs = axs.flatten()  # Flatten array for easy iteration
+    axs = axs.ravel()
 
-    # Plot each ensemble member
-    for i in range(50):
-        ax = axs[i]
-        member_data = data_for_month.isel(number=i)[index_metric]  # Select dynamically
+    for i, ax in enumerate(axs[:50]):
+        member_data = data_for_month.isel(number=i)[index_metric]
         p = member_data.plot(
             ax=ax,
             transform=ccrs.PlateCarree(),
-            x="longitude",
-            y="latitude",
-            add_colorbar=False,
+            x="longitude", y="latitude",
             cmap="viridis",
+            add_colorbar=False
         )
+        ax.coastlines(color="white", linewidth=1)
+        ax.add_feature(cfeature.BORDERS, edgecolor="white", linewidth=1)
+        ax.set_title(f"Member {i + 1}")
 
-        ax.coastlines(color="white", linewidth=1)  # Set coastline color to white
-        ax.add_feature(
-            cfeature.BORDERS, edgecolor="white", linewidth=1
-        )  # Add country borders in white
-        ax.set_title(f"Member {i+1}")
+    plt.subplots_adjust(bottom=0.12, top=0.92, wspace=0.05, hspace=0.15)
 
-    # Adjust layout for colorbar
-    plt.subplots_adjust(
-        bottom=0.1, top=0.9, left=0.05, right=0.95, wspace=0.1, hspace=0.1
-    )
-
-    # Add a color bar at the bottom
-    cbar_ax = fig.add_axes([0.15, 0.06, 0.7, 0.015])
-    fig.colorbar(p, cax=cbar_ax, orientation="horizontal")
+    # single shared colour bar
+    cbar_ax = fig.add_axes([0.15, 0.06, 0.7, 0.02])
+    fig.colorbar(p, cax=cbar_ax, orientation="horizontal", label=index_metric)
 
     plt.show()
 
